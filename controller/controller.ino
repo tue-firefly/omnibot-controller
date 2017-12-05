@@ -1,3 +1,10 @@
+/**
+ * Low-level controller for omnibot.
+ * Applies velocities (x, y, psi) read over serial to the three motors.
+ *
+ * Maintainer: Daan de Graaf
+**/
+
 #define NR_MOTORS 3
 // Motor pins
 static const int PWM_PINS[NR_MOTORS] = {3, 5, 6};
