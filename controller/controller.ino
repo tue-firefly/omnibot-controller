@@ -7,8 +7,23 @@
 
 #define NR_MOTORS 3
 // Motor pins
+
+#ifndef RPI_1
+#ifndef RPI_2
+#define RPI_1
+#endif
+#endif
+
+#ifdef RPI_1
+static const int PWM_PINS[NR_MOTORS] = {3, 5, 6};
+static const int DIRECTION_PINS[NR_MOTORS] = {2, 4, 7};
+#endif
+
+#ifdef RPI_2
 static const int PWM_PINS[NR_MOTORS] = {3, 5, 6};
 static const int DIRECTION_PINS[NR_MOTORS] = {2, 9, 10};
+#endif
+
 
 // Button to run test sequence
 #define DEBUG_BUTTON_PIN A0
@@ -34,41 +49,23 @@ bool getCommand(Command *cmd) {
     if(Serial.available() >= bufferSize) {
         Serial.readBytes(buffer, bufferSize);
         float* casted = (float*) buffer;
-        cmd->x = casted[0];
-        cmd->y = casted[1];
+        // N.B. signs of x and y are flipped for convention
+        cmd->x = -casted[0];
+        cmd->y = -casted[1];
         cmd->psi = casted[2];
         return true;
     }
     return false;
 }
 
-void setup() {
-    // For communication with the Raspberry Pi
-    Serial.begin(115200);
+void setMotor(int index, float velocity) {
+    // Set turning direction
+    bool positive = velocity > 0;
+    digitalWrite(DIRECTION_PINS[index], positive ? HIGH : LOW);
 
-    // Setup button as input (PULLUP to use internal resistor)
-    pinMode(DEBUG_BUTTON_PIN, INPUT_PULLUP);
-
-    // Set motor controller communication pins as outputs
-    for(int i = 0; i < NR_MOTORS; i++){
-        pinMode(DIRECTION_PINS[i], OUTPUT);
-        analogWrite(PWM_PINS[i], 0);
-    }
-    Serial.println("Ready.");
-}
-
-void loop() {
-    Command cmd;
-    if(getCommand(&cmd)) {
-        applyCommand(&cmd);   
-    }
-    int v = digitalRead(DEBUG_BUTTON_PIN);
-    digitalWrite(13, v);
-    if(v == LOW) {
-        Serial.println("Running test sequence");
-        runTestSequence();
-        Serial.println("Done");
-    }
+    // Set PWM value
+    int pwm = constrain(abs(velocity), 0, 255);
+    analogWrite(PWM_PINS[index], pwm);
 }
 
 void applyCommand(Command *cmd) {
@@ -83,16 +80,6 @@ void applyCommand(Command *cmd) {
     for(int i = 0; i < NR_MOTORS; i++) {
         setMotor(i, v[i]);
     }
-}
-
-void setMotor(int index, float velocity) {
-    // Set turning direction
-    bool positive = velocity > 0;
-    digitalWrite(DIRECTION_PINS[index], positive ? HIGH : LOW);
-
-    // Set PWM value
-    int pwm = constrain(abs(velocity), 0, 255);
-    analogWrite(PWM_PINS[index], pwm);
 }
 
 void runTestSequence() {
@@ -125,5 +112,36 @@ void runTestSequence() {
     cmd.psi = 0;
     applyCommand(&cmd);
     delay(200);
+}
+
+void setup() {
+    // For communication with the Raspberry Pi
+    Serial.begin(115200);
+
+    // Setup button as input (PULLUP to use internal resistor)
+    pinMode(DEBUG_BUTTON_PIN, INPUT_PULLUP);
+
+    // Set motor controller communication pins as outputs
+    for(int i = 0; i < NR_MOTORS; i++){
+        pinMode(DIRECTION_PINS[i], OUTPUT);
+        analogWrite(PWM_PINS[i], 0);
+    }
+    Serial.println("Ready.");
+
+    //runTestSequence();
+}
+
+void loop() {
+    Command cmd;
+    if(getCommand(&cmd)) {
+        applyCommand(&cmd);   
+    }
+    int v = digitalRead(DEBUG_BUTTON_PIN);
+    digitalWrite(13, v);
+    if(v == LOW) {
+        Serial.println("Running test sequence");
+        runTestSequence();
+        Serial.println("Done");
+    }
 }
 
