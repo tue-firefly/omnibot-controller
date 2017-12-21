@@ -8,20 +8,35 @@
 #define NR_MOTORS 3
 // Motor pins
 
-#ifndef RPI_1
-#ifndef RPI_2
-#define RPI_1
+#ifndef PINS_1
+#ifndef PINS_2
+#ifndef PINS_3
+
+#define PINS_3
+
+#endif
 #endif
 #endif
 
-#ifdef RPI_1
+#ifdef PINS_1
 static const int PWM_PINS[NR_MOTORS] = {3, 5, 6};
 static const int DIRECTION_PINS[NR_MOTORS] = {2, 4, 7};
+#define MOTOR_GAIN 1
 #endif
 
-#ifdef RPI_2
+#ifdef PINS_2
 static const int PWM_PINS[NR_MOTORS] = {3, 5, 6};
 static const int DIRECTION_PINS[NR_MOTORS] = {2, 9, 10};
+#define MOTOR_GAIN 1
+#endif
+
+#ifdef PINS_3
+static const int PWM_PINS[NR_MOTORS] = {3, 6, 9};
+static const int DIRECTION_PINS[NR_MOTORS] = {2, 5, 8};
+// Robot three's motor drivers have one additional pin per motor that needs to be the inverse of the direction pin
+static const int DIRECTION_PINS_INV[NR_MOTORS] = {4, 7, 10};
+// TODO probably not very accurate
+#define MOTOR_GAIN 4
 #endif
 
 
@@ -62,9 +77,12 @@ void setMotor(int index, float velocity) {
     // Set turning direction
     bool positive = velocity > 0;
     digitalWrite(DIRECTION_PINS[index], positive ? HIGH : LOW);
+    #ifdef PINS_3
+    digitalWrite(DIRECTION_PINS_INV[index], positive ? LOW : HIGH);
+    #endif
 
     // Set PWM value
-    int pwm = constrain(abs(velocity), 0, 255);
+    int pwm = constrain(abs(velocity * MOTOR_GAIN), 0, 255);
     analogWrite(PWM_PINS[index], pwm);
 }
 
@@ -76,6 +94,16 @@ void applyCommand(Command *cmd) {
     v[0] = -v[0]; // Convention
     v[1] = (1/2.0) * cmd->x + (1/3.0) * cmd->y + (1/3.0) * cmd->psi;
     v[2] = 0       * cmd->x - (2/3.0) * cmd->y + (1/3.0) * cmd->psi;
+
+    float m = 0;
+    for(float val : v) {
+        m = max(m, abs(val));
+    }
+    if (m > 255) {
+        for(int i = 0; i < NR_MOTORS; i++) {
+            v[i] /= m / 255;
+        }
+    }
     
     for(int i = 0; i < NR_MOTORS; i++) {
         setMotor(i, v[i]);
@@ -126,6 +154,11 @@ void setup() {
         pinMode(DIRECTION_PINS[i], OUTPUT);
         analogWrite(PWM_PINS[i], 0);
     }
+    #ifdef PINS_3
+    for(int i = 0; i < NR_MOTORS; i++){
+        pinMode(DIRECTION_PINS_INV[i], OUTPUT);
+    }
+    #endif
     Serial.println("Ready.");
 
     //runTestSequence();
