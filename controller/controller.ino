@@ -12,7 +12,7 @@
 #ifndef PINS_2
 #ifndef PINS_3
 
-#define PINS_3
+#define PINS_1
 
 #endif
 #endif
@@ -26,7 +26,7 @@ static const int DIRECTION_PINS[NR_MOTORS] = {2, 4, 7};
 
 #ifdef PINS_2
 static const int PWM_PINS[NR_MOTORS] = {3, 5, 6};
-static const int DIRECTION_PINS[NR_MOTORS] = {2, 9, 10};
+static const int DIRECTION_PINS[NR_MOTORS] = {2, 4, 7};
 #define MOTOR_GAIN 1
 #endif
 
@@ -36,7 +36,7 @@ static const int DIRECTION_PINS[NR_MOTORS] = {2, 5, 8};
 // Robot three's motor drivers have one additional pin per motor that needs to be the inverse of the direction pin
 static const int DIRECTION_PINS_INV[NR_MOTORS] = {4, 7, 10};
 // TODO probably not very accurate
-#define MOTOR_GAIN 4
+#define MOTOR_GAIN 2
 #endif
 
 
