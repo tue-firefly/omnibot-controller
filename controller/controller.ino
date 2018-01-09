@@ -6,8 +6,9 @@
 **/
 
 #define NR_MOTORS 3
-// Motor pins
+#define R_ROBOT 0.15
 
+// Motor pins
 #ifndef PINS_1
 #ifndef PINS_2
 #ifndef PINS_3
@@ -90,10 +91,10 @@ void applyCommand(Command *cmd) {
     float v[NR_MOTORS];
 
     // TODO these values are probably not 100% correct
-    v[0] = (1/2.0) * cmd->x - (1/3.0) * cmd->y - (1/3.0) * cmd->psi;
-    v[0] = -v[0]; // Convention
-    v[1] = (1/2.0) * cmd->x + (1/3.0) * cmd->y + (1/3.0) * cmd->psi;
-    v[2] = 0       * cmd->x - (2/3.0) * cmd->y + (1/3.0) * cmd->psi;
+    v[0] = -cos(M_PI/6) * cmd->x + cos(M_PI/3) * cmd->y + R_ROBOT * cmd->psi;
+    //v[0] = -v[0]; // Convention
+    v[1] = 0 *            cmd->x - 1 *           cmd->y + R_ROBOT * cmd->psi;
+    v[2] = cos(M_PI/6) *  cmd->x + cos(M_PI/3) * cmd->y + R_ROBOT * cmd->psi;
 
     float m = 0;
     for(float val : v) {
