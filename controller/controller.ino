@@ -13,12 +13,14 @@
 #ifndef PINS_2
 #ifndef PINS_3
 
+//By default Pin configuration 1 is used
 #define PINS_1
 
 #endif
 #endif
 #endif
 
+// Pin configurations for the different arduinos
 #ifdef PINS_1
 static const int PWM_PINS[NR_MOTORS] = {3, 5, 6};
 static const int DIRECTION_PINS[NR_MOTORS] = {2, 4, 7};
